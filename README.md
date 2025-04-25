@@ -179,12 +179,107 @@ The server will start at `http://localhost:<PORT>` (default: 3000).
 
 ## Deployment
 
-See the [Deployment to DigitalOcean](./docs/deployment.md) guide for:
-- Droplet provisioning
-- Node.js & MongoDB setup
-- PM2 process management
-- UFW firewall rules
-- Optional Nginx reverse proxy & SSL via Certbot
+### DigitalOcean Droplet Setup
+1. **SSH into your Droplet**  
+   ```bash
+   ssh corey@<YOUR_DROPLET_IP>
+   # Enter your password when prompted
+   ```
+2. **Create a non-root sudo user** (recommended)  
+   ```bash
+   sudo adduser corey
+   sudo usermod -aG sudo corey
+   exit
+   ssh corey@<YOUR_DROPLET_IP>
+   ```
+3. **System updates**  
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+4. **Install Node.js (v18+)**  
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+5. **Skip local MongoDB** (using Atlas instead)
+
+6. **Clone your repository & install deps**  
+   ```bash
+   cd ~
+   git clone https://github.com/YourUsername/YourRepoName.git quiz-api
+   cd quiz-api
+   npm install
+   ```
+7. **Configure `.env`**  
+   ```bash
+   cp .env.example .env
+   nano .env
+   # Set your MONGO_URI to Atlas connection string and PORT=3000
+   ```
+8. **Process management with PM2**  
+   ```bash
+   sudo npm install -g pm2
+   pm2 start index.js --name cmca-quiz-api
+   pm2 save
+   pm2 startup systemd
+   ```
+9. **Enable firewall (UFW)**  
+   ```bash
+   sudo ufw allow OpenSSH
+   sudo ufw allow http
+   sudo ufw allow https
+   sudo ufw enable
+   ```
+
+---
+
+### Domain & SSL Configuration
+
+1. **Add domain in DigitalOcean**  
+   - In the control panel, go to **Networking → Domains** and add your Namecheap domain (e.g., `yourdomain.com`), assigning it to your droplet.
+
+2. **Point Namecheap to DigitalOcean nameservers**  
+   - In Namecheap DNS settings, set custom nameservers to:
+     ```text
+     ns1.digitalocean.com
+     ns2.digitalocean.com
+     ns3.digitalocean.com
+     ```
+
+3. **Create DNS records in DigitalOcean**  
+   - **A Record** for `@` → your droplet IP  
+   - **CNAME** for `www` → `@`
+
+4. **Configure Nginx reverse proxy**  
+   ```bash
+   sudo apt install -y nginx
+   sudo tee /etc/nginx/sites-available/cmca-quiz-api << 'EOF'
+   server {
+     listen 80;
+     server_name yourdomain.com www.yourdomain.com;
+
+     location / {
+       proxy_pass http://localhost:3000;
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection 'upgrade';
+       proxy_set_header Host $host;
+       proxy_cache_bypass $http_upgrade;
+     }
+   }
+   EOF
+   sudo ln -s /etc/nginx/sites-available/cmca-quiz-api /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+5. **Obtain SSL with Certbot**  
+   ```bash
+   sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+   ```
+6. **Verify HTTPS**  
+   - Visit `https://yourdomain.com` and ensure the certificate is valid and your API responds.
 
 ---
 

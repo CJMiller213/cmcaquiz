@@ -3,9 +3,15 @@ require('dotenv').config();          // 1. load .env first
 const express  = require('express');
 const mongoose = require('mongoose');
 const Question = require('./models/questions');  // 2. import model
+const cors = require('cors');
+
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: ['https://www.amgwebapps.com', 'http://localhost:5173'], 
+  // you can use '*' to allow all origins in development
+}));
 
 const PORT = process.env.PORT || 3000;
 

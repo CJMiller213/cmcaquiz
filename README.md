@@ -16,12 +16,14 @@ A RESTful API for managing multiple-choice quiz questions aligned with the Commu
 9. [Deployment](#deployment)
 10. [Contributing](#contributing)
 11. [License](#license)
+12. [Change Log](#change-log)
 
 ---
 
 ## Features
 
 - CRUD operations for quiz questions
+- Bulk insertion of multiple questions via `/questions/bulk`
 - Questions categorized by CMCA® exam domains:
   - Governance
   - Financial Management
@@ -31,7 +33,7 @@ A RESTful API for managing multiple-choice quiz questions aligned with the Commu
   - Risk Management
 - Schema validation with Mongoose (including enum and custom validators)
 - Environment configuration via `.env`
-- Ready for deployment on DigitalOcean (Docker, PM2, Nginx/SSL)
+- Ready for deployment on DigitalOcean (PM2, Nginx/SSL)
 
 ---
 
@@ -89,14 +91,15 @@ The server will start at `http://localhost:<PORT>` (default: 3000).
 
 ## API Endpoints
 
-| Method | Endpoint             | Description                       |
-|--------|----------------------|-----------------------------------|
-| GET    | `/`                  | Health check                      |
-| POST   | `/questions`         | Create a new question             |
+| Method | Endpoint             | Description                                           |
+|--------|----------------------|-------------------------------------------------------|
+| GET    | `/`                  | Health check                                          |
+| POST   | `/questions`         | Create a new question                                 |
+| POST   | `/questions/bulk`    | Bulk-create multiple questions                        |
 | GET    | `/questions`         | Retrieve all questions (optional filter by `?subject=`) |
-| GET    | `/questions/:id`     | Retrieve a single question by ID  |
-| PUT    | `/questions/:id`     | Update an existing question by ID |
-| DELETE | `/questions/:id`     | Delete a question by ID           |
+| GET    | `/questions/:id`     | Retrieve a single question by ID                      |
+| PUT    | `/questions/:id`     | Update an existing question by ID                     |
+| DELETE | `/questions/:id`     | Delete a question by ID                               |
 
 ---
 
@@ -113,6 +116,28 @@ The server will start at `http://localhost:<PORT>` (default: 3000).
       "answerIndex":2,
       "explanation":"Minimum number of members required to conduct business."
     }'
+  ```
+
+- **Bulk insert questions**:
+  ```bash
+  curl -X POST http://localhost:3000/questions/bulk \
+    -H "Content-Type: application/json" \
+    -d '[
+      {
+        "subject":"Governance",
+        "text":"What is quorum?",
+        "choices":["A","B","C","D"],
+        "answerIndex":2,
+        "explanation":"Minimum number of members required to conduct business."
+      },
+      {
+        "subject":"Financial Management",
+        "text":"Which statement reports assets and liabilities?",
+        "choices":["Balance Sheet","Income Statement","Cash Flow","Equity Statement"],
+        "answerIndex":0,
+        "explanation":"A Balance Sheet shows assets, liabilities, and equity."
+      }
+    ]'
   ```
 
 - **List all questions**:
@@ -147,18 +172,18 @@ The server will start at `http://localhost:<PORT>` (default: 3000).
 ## Testing with Postman
 
 1. Create a Postman environment with variable `base_url = http://localhost:3000`.
-2. Use the collection `Quiz API` provided in `/postman` (if included) or manually configure requests.
-3. Send requests to `{{base_url}}/questions` for full CRUD coverage.
+2. Use the collection `Quiz API` provided or manually configure requests.
+3. Send requests to `{{base_url}}/questions` and `/bulk` for full CRUD coverage.
 
 ---
 
 ## Deployment
 
 See the [Deployment to DigitalOcean](./docs/deployment.md) guide for:
-- Droplet provisioning  
-- Node.js & MongoDB setup  
-- PM2 process management  
-- UFW firewall rules  
+- Droplet provisioning
+- Node.js & MongoDB setup
+- PM2 process management
+- UFW firewall rules
 - Optional Nginx reverse proxy & SSL via Certbot
 
 ---
@@ -177,3 +202,17 @@ Contributions are welcome! Please:
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Change Log
+
+### v0.1.1 - 2025-04-25
+- **Added** bulk insertion endpoint (`POST /questions/bulk`) for inserting multiple questions at once.
+- **Updated** API Endpoints and Usage Examples to document bulk creation.
+
+### v0.1.0 - 2025-04-25
+- Initial documentation and CRUD implementation for single-question endpoints.
+- Environment configuration and deployment instructions.
+- Mongoose model with enum validation for CMCA® domains.
+- Testing guidelines with Postman.

@@ -38,6 +38,26 @@ app.post('/questions', async (req, res) => {
   }
 });
 
+// Create Bulk
+
+app.post('/questions/bulk', async (req, res) => {
+  const items = req.body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Request body must be a non-empty array of questions.' });
+  } 
+  try {
+    // insertMany will run all your schema validators on each item
+    // { ordered: true } (default) stops at the first error;
+    // use { ordered: false } to continue and collect all valid inserts
+    const inserted = await Question.insertMany(items, { ordered: true });
+    res.status(201).json(inserted);
+  } catch (err) {
+    // err will be a BulkWriteError or a ValidationError
+    res.status(400).json({error: err.message})
+  }
+})
+
 // READ all (optionally filter by subject)
 app.get('/questions', async (req, res) => {
   const filter = {};

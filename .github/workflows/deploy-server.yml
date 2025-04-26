@@ -1,0 +1,33 @@
+name: Deploy API to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          cd quiz-api            # or the folder where your server lives
+          npm ci
+
+      - name: Deploy server via SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ~/quiz-api
+            git pull origin main
+            npm ci
+            pm2 restart cmca-quiz-api
+            sudo systemctl reload nginx

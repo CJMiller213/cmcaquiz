@@ -9,9 +9,15 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: ['https://www.amgwebapps.com', 'http://localhost:5173'], 
-  // you can use '*' to allow all origins in development
+  origin: [
+    'https://www.amgwebapps.com',   // your production domain
+    'https://amgwebapps.com',       // in case you use both
+    'http://localhost:5173',        // your React dev server
+  ],
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
 }));
+app.options('*', cors()); // enable pre-flight across the board
 
 const PORT = process.env.PORT || 3000;
 

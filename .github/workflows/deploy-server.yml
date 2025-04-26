@@ -14,9 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: |
-          cd quiz-api            # or the folder where your server lives
-          npm ci
+        run: npm ci
 
       - name: Deploy server via SSH
         uses: appleboy/ssh-action@v0.1.8
